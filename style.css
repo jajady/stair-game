@@ -4,9 +4,10 @@
   --button: #9b9b9b;
   --button-dark: #7d7d7d;
   --text: #203020;
-  --step-width: 44px;
+  --step-width: 60px;
   --step-height: 18px;
   --step-gap: 72px;
+  --track-width: 560px;
 }
 
 * {
@@ -52,6 +53,10 @@ body {
 .steps {
   position: absolute;
   inset: 0;
+  width: var(--track-width);
+  left: 0;
+  transition: transform 220ms ease-in-out;
+  will-change: transform;
 }
 
 .step {

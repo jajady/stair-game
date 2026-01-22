@@ -1,3 +1,4 @@
+const gameEl = document.querySelector(".game");
 const stepsEl = document.getElementById("steps");
 const characterEl = document.getElementById("character");
 const scoreEl = document.getElementById("score");
@@ -21,11 +22,23 @@ let busy = false;
 let columnX = [];
 
 function computeColumns() {
-  const gameRect = document.querySelector(".game").getBoundingClientRect();
   const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
-  const available = Math.max(0, gameRect.width - horizontalPadding * 2 - stepWidth);
+  const trackWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--track-width"));
+  const available = Math.max(0, trackWidth - horizontalPadding * 2 - stepWidth);
   const gap = columns > 1 ? available / (columns - 1) : 0;
   columnX = Array.from({ length: columns }, (_, index) => horizontalPadding + index * gap);
+  stepsEl.style.width = `${trackWidth}px`;
+}
+
+function updateTrack(step) {
+  if (!step) return;
+  const gameRect = gameEl.getBoundingClientRect();
+  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
+  const centerX = step.x + stepWidth / 2;
+  const desiredCenter = gameRect.width / 2;
+  const translate = desiredCenter - centerX;
+  stepsEl.style.transform = `translateX(${translate}px)`;
+  characterEl.style.left = `${desiredCenter + characterOffset}px`;
 }
 
 function createStep(colIndex, y) {
@@ -69,12 +82,10 @@ function setDirection(dir) {
 function positionCharacter(step) {
   if (!step) return;
   const stepHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-height"));
-  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
   const charHeight = characterEl.getBoundingClientRect().height || 70;
-  const centerX = step.x + stepWidth / 2;
   const top = step.y - charHeight + stepHeight - 6;
-  characterEl.style.left = `${centerX + characterOffset}px`;
   characterEl.style.top = `${top}px`;
+  updateTrack(step);
 }
 
 function animateJump() {
@@ -154,3 +165,8 @@ forwardBtn.addEventListener("click", () => move("forward"));
 restartBtn.addEventListener("click", resetGame);
 
 resetGame();
+
+window.addEventListener("resize", () => {
+  computeColumns();
+  positionCharacter(steps[0]);
+});
