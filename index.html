@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kiwing Stair</title>
+    <style>
+      :root {
+        --bg: #eef9c8;
+        --step: #86d965;
+        --button: #9b9b9b;
+        --button-dark: #7d7d7d;
+        --text: #203020;
+        --step-width: 76px;
+        --step-height: 20px;
+        --step-gap: 72px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 20% 10%, #f6ffd9 0%, var(--bg) 55%, #e8f2b1 100%);
+        color: var(--text);
+        height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+
+      .phone {
+        width: min(360px, 94vw);
+        height: min(760px, 92vh);
+        border-radius: 24px;
+        background: linear-gradient(180deg, #f7ffd8 0%, #f0f8c0 55%, #e2efaa 100%);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+      }
+
+      .game {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      .score {
+        position: absolute;
+        top: 16px;
+        left: 18px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        font-size: 18px;
+        z-index: 5;
+      }
+
+      .steps {
+        position: absolute;
+        inset: 0;
+      }
+
+      .step {
+        position: absolute;
+        width: var(--step-width);
+        height: var(--step-height);
+        background: var(--step);
+        border-radius: 6px;
+        box-shadow: 0 6px 0 rgba(60, 120, 40, 0.2);
+        transition: top 220ms ease-in-out;
+      }
+
+      .character {
+        position: absolute;
+        width: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 140px;
+        z-index: 4;
+        transition: transform 140ms ease-in-out;
+      }
+
+      .character.flip {
+        transform: translateX(-50%) scaleX(-1);
+      }
+
+      .character.jump {
+        animation: jump 220ms ease-in-out;
+      }
+
+      @keyframes jump {
+        0% {
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-26px);
+        }
+        100% {
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+
+      .character.flip.jump {
+        animation: jump-flip 220ms ease-in-out;
+      }
+
+      @keyframes jump-flip {
+        0% {
+          transform: translateX(-50%) scaleX(-1) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) scaleX(-1) translateY(-26px);
+        }
+        100% {
+          transform: translateX(-50%) scaleX(-1) translateY(0);
+        }
+      }
+
+      .controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 26px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 24px;
+        z-index: 6;
+      }
+
+      .btn {
+        width: 76px;
+        height: 76px;
+        border-radius: 18px;
+        background: var(--button);
+        border: none;
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 -4px 0 var(--button-dark);
+        cursor: pointer;
+        transition: transform 120ms ease;
+      }
+
+      .btn:active {
+        transform: translateY(2px);
+      }
+
+      .btn svg {
+        width: 34px;
+        height: 34px;
+        fill: #fff;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.85);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 160ms ease;
+        z-index: 7;
+      }
+
+      .overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .panel {
+        background: #ffffff;
+        padding: 20px 28px;
+        border-radius: 18px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+        text-align: center;
+      }
+
+      .panel h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+
+      .panel button {
+        margin-top: 10px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: none;
+        background: #333;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <div class="game">
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="steps" id="steps"></div>
+        <img src="assets/flying_kiwing.png" alt="Kiwing" class="character" id="character" />
+        <div class="controls">
+          <button class="btn" id="turnBtn" aria-label="방향 전환하고 이동">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 7H3l4-4 4 4H7v4H5V7zm10 10h4l-4 4-4-4h4v-4h2v4z" />
+            </svg>
+          </button>
+          <button class="btn" id="forwardBtn" aria-label="현재 방향으로 이동">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2l7 7h-4v10h-6V9H5l7-7z" />
+            </svg>
+          </button>
+        </div>
+        <div class="overlay" id="overlay">
+          <div class="panel">
+            <h2>Game Over</h2>
+            <div>Score: <span id="finalScore">0</span></div>
+            <button id="restartBtn">다시 시작</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const stepsEl = document.getElementById("steps");
+      const characterEl = document.getElementById("character");
+      const scoreEl = document.getElementById("score");
+      const finalScoreEl = document.getElementById("finalScore");
+      const overlayEl = document.getElementById("overlay");
+      const turnBtn = document.getElementById("turnBtn");
+      const forwardBtn = document.getElementById("forwardBtn");
+      const restartBtn = document.getElementById("restartBtn");
+
+      const stepGap = 72;
+      const stepsVisible = 9;
+      const leftX = 60;
+      const rightX = 200;
+      const baseY = 480;
+
+      let steps = [];
+      let score = 0;
+      let currentDir = "right";
+      let busy = false;
+
+      function createStep(dir, y) {
+        const el = document.createElement("div");
+        el.className = "step";
+        const x = dir === "right" ? rightX : leftX;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        stepsEl.appendChild(el);
+        return { el, x, y, dir };
+      }
+
+      function resetSteps() {
+        stepsEl.innerHTML = "";
+        steps = [];
+        let y = baseY;
+        let dir = "right";
+        for (let i = 0; i < stepsVisible; i += 1) {
+          steps.push(createStep(dir, y));
+          y -= stepGap;
+          dir = Math.random() > 0.5 ? "right" : "left";
+        }
+        setDirection(steps[0]?.dir || "right");
+      }
+
+      function setDirection(dir) {
+        currentDir = dir;
+        characterEl.classList.toggle("flip", currentDir === "left");
+      }
+
+      function animateJump() {
+        characterEl.classList.remove("jump");
+        void characterEl.offsetWidth;
+        characterEl.classList.add("jump");
+      }
+
+      function shiftSteps() {
+        steps.forEach((step) => {
+          step.y += stepGap;
+          step.el.style.top = `${step.y}px`;
+        });
+
+        const first = steps[0];
+        if (first.y > baseY + stepGap) {
+          steps.shift();
+          stepsEl.removeChild(first.el);
+        }
+
+        const topY = Math.min(...steps.map((step) => step.y));
+        const newDir = Math.random() > 0.5 ? "right" : "left";
+        const newStep = createStep(newDir, topY - stepGap);
+        steps.push(newStep);
+      }
+
+      function move(action) {
+        if (busy || overlayEl.classList.contains("show")) return;
+        busy = true;
+
+        const nextStep = steps[1];
+        if (!nextStep) {
+          busy = false;
+          return;
+        }
+
+        let intendedDir = currentDir;
+        if (action === "turn") {
+          intendedDir = currentDir === "right" ? "left" : "right";
+        }
+
+        const requiredDir = nextStep.dir;
+        const isCorrect = intendedDir === requiredDir;
+
+        if (!isCorrect) {
+          overlayEl.classList.add("show");
+          finalScoreEl.textContent = score;
+          busy = false;
+          return;
+        }
+
+        setDirection(requiredDir);
+        animateJump();
+        score += 1;
+        scoreEl.textContent = score;
+        shiftSteps();
+
+        setTimeout(() => {
+          busy = false;
+        }, 220);
+      }
+
+      function resetGame() {
+        score = 0;
+        scoreEl.textContent = score;
+        overlayEl.classList.remove("show");
+        setDirection("right");
+        resetSteps();
+      }
+
+      turnBtn.addEventListener("click", () => move("turn"));
+      forwardBtn.addEventListener("click", () => move("forward"));
+      restartBtn.addEventListener("click", resetGame);
+
+      resetGame();
+    </script>
+  </body>
+</html>
