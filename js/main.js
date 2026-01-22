@@ -9,8 +9,8 @@ const restartBtn = document.getElementById("restartBtn");
 
 const stepGap = 72;
 const stepsVisible = 9;
-const leftX = 60;
-const rightX = 200;
+const columns = 7;
+const horizontalPadding = 24;
 const characterOffset = 3;
 const baseY = 480;
 
@@ -18,44 +18,62 @@ let steps = [];
 let score = 0;
 let currentDir = "right";
 let busy = false;
+let columnX = [];
 
-function createStep(dir, y) {
+function computeColumns() {
+  const gameRect = document.querySelector(".game").getBoundingClientRect();
+  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
+  const available = Math.max(0, gameRect.width - horizontalPadding * 2 - stepWidth);
+  const gap = columns > 1 ? available / (columns - 1) : 0;
+  columnX = Array.from({ length: columns }, (_, index) => horizontalPadding + index * gap);
+}
+
+function createStep(colIndex, y) {
   const el = document.createElement("div");
   el.className = "step";
-  const x = dir === "right" ? rightX : leftX;
+  const x = columnX[colIndex] ?? horizontalPadding;
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;
   stepsEl.appendChild(el);
-  return { el, x, y, dir };
+  return { el, x, y, colIndex };
+}
+
+function getNextColumnIndex(currentIndex) {
+  const dir = Math.random() > 0.5 ? 1 : -1;
+  let nextIndex = currentIndex + dir;
+  if (nextIndex < 0 || nextIndex >= columns) {
+    nextIndex = currentIndex - dir;
+  }
+  return Math.max(0, Math.min(columns - 1, nextIndex));
 }
 
 function resetSteps() {
   stepsEl.innerHTML = "";
   steps = [];
+  computeColumns();
   let y = baseY;
-  let dir = "right";
+  let colIndex = Math.floor(Math.random() * columns);
   for (let i = 0; i < stepsVisible; i += 1) {
-    steps.push(createStep(dir, y));
+    steps.push(createStep(colIndex, y));
     y -= stepGap;
-    dir = Math.random() > 0.5 ? "right" : "left";
+    colIndex = getNextColumnIndex(colIndex);
   }
-  setDirection(steps[0]?.dir || "right");
+  setDirection("right");
 }
 
 function setDirection(dir) {
   currentDir = dir;
   characterEl.classList.toggle("flip", currentDir === "left");
-  const stepX = dir === "right" ? rightX : leftX;
-  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
-  const centerX = stepX + stepWidth / 2;
-  characterEl.style.left = `${centerX + characterOffset}px`;
 }
 
 function positionCharacter(step) {
   if (!step) return;
   const stepHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-height"));
+  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
   const charHeight = characterEl.getBoundingClientRect().height || 70;
+  const centerX = step.x + stepWidth / 2;
   const top = step.y - charHeight + stepHeight - 6;
+  characterEl.style.left = `${centerX + characterOffset}px`;
   characterEl.style.top = `${top}px`;
 }
 
@@ -78,8 +96,9 @@ function shiftSteps() {
   }
 
   const topY = Math.min(...steps.map((step) => step.y));
-  const newDir = Math.random() > 0.5 ? "right" : "left";
-  const newStep = createStep(newDir, topY - stepGap);
+  const lastIndex = steps[steps.length - 1].colIndex;
+  const newIndex = getNextColumnIndex(lastIndex);
+  const newStep = createStep(newIndex, topY - stepGap);
   steps.push(newStep);
 }
 
@@ -93,12 +112,13 @@ function move(action) {
     return;
   }
 
+  const currentStep = steps[0];
   let intendedDir = currentDir;
   if (action === "turn") {
     intendedDir = currentDir === "right" ? "left" : "right";
   }
 
-  const requiredDir = nextStep.dir;
+  const requiredDir = nextStep.colIndex > currentStep.colIndex ? "right" : "left";
   const isCorrect = intendedDir === requiredDir;
 
   if (!isCorrect) {
