@@ -14,6 +14,7 @@ const columns = 7;
 const horizontalPadding = 24;
 const characterOffset = 3;
 const baseY = 480;
+const fallDuration = 520;
 
 let steps = [];
 let score = 0;
@@ -90,8 +91,18 @@ function positionCharacter(step) {
 
 function animateJump() {
   characterEl.classList.remove("jump");
+  characterEl.classList.remove("fall-left");
+  characterEl.classList.remove("fall-right");
   void characterEl.offsetWidth;
   characterEl.classList.add("jump");
+}
+
+function animateFall(direction) {
+  characterEl.classList.remove("jump");
+  characterEl.classList.remove("fall-left");
+  characterEl.classList.remove("fall-right");
+  void characterEl.offsetWidth;
+  characterEl.classList.add(direction === "left" ? "fall-left" : "fall-right");
 }
 
 function shiftSteps() {
@@ -133,9 +144,13 @@ function move(action) {
   const isCorrect = intendedDir === requiredDir;
 
   if (!isCorrect) {
-    overlayEl.classList.add("show");
-    finalScoreEl.textContent = score;
-    busy = false;
+    setDirection(intendedDir);
+    animateFall(intendedDir);
+    setTimeout(() => {
+      overlayEl.classList.add("show");
+      finalScoreEl.textContent = score;
+      busy = false;
+    }, fallDuration);
     return;
   }
 
@@ -156,6 +171,8 @@ function resetGame() {
   scoreEl.textContent = score;
   overlayEl.classList.remove("show");
   setDirection("right");
+  characterEl.classList.remove("fall-left");
+  characterEl.classList.remove("fall-right");
   resetSteps();
   positionCharacter(steps[0]);
 }
