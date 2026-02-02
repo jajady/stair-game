@@ -114,12 +114,30 @@ body {
   transition: top 220ms ease-in-out;
 }
 
-.goal-frame {
+.goal-frame-wrap {
   position: absolute;
-  width: 107px;
-  height: 138px;
+  left: 50%;
+  transform: translateX(-50%);
   pointer-events: none;
   z-index: 3;
+}
+
+.goal-frame-img {
+  display: block;
+  width: 107px;
+  height: 138px;
+  position: relative;
+  z-index: 1;
+}
+
+.goal-star {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 203px;
+  height: 142px;
+  z-index: 2;
 }
 
 .character {

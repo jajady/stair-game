@@ -19,8 +19,8 @@ let baseY = 560;
 const fallDuration = 520;
 const goalSteps = 30;
 const successDelay = 900;
-const frameWidth = 107;
 const frameHeight = 138;
+const frameOffset = 35;
 const stepImages = [
   "assets/stair_pink.png",
   "assets/stair-green.png",
@@ -34,7 +34,7 @@ let busy = false;
 let columnX = [];
 let stepsCreated = 0;
 let goalStep = null;
-let frameEl = null;
+let frameWrapEl = null;
 let gameFinished = false;
 
 function computeColumns() {
@@ -76,13 +76,23 @@ function createStep(colIndex, y) {
   const step = { el, x, y, colIndex, isGoal };
   if (isGoal) {
     goalStep = step;
-    if (!frameEl) {
-      frameEl = document.createElement("img");
-      frameEl.className = "goal-frame";
-      frameEl.src = "assets/frame.png";
-      stepsEl.appendChild(frameEl);
+    if (!frameWrapEl) {
+      frameWrapEl = document.createElement("div");
+      frameWrapEl.className = "goal-frame-wrap";
+      frameWrapEl.style.top = `${-frameHeight - frameOffset}px`;
+
+      const frameImg = document.createElement("img");
+      frameImg.className = "goal-frame-img";
+      frameImg.src = "assets/frame.png";
+
+      const starImg = document.createElement("img");
+      starImg.className = "goal-star";
+      starImg.src = "assets/stars.png";
+
+      frameWrapEl.appendChild(frameImg);
+      frameWrapEl.appendChild(starImg);
+      el.appendChild(frameWrapEl);
     }
-    updateFramePosition(step);
   }
   stepsCreated += 1;
   return step;
@@ -101,7 +111,7 @@ function resetSteps() {
   stepsEl.innerHTML = "";
   steps = [];
   goalStep = null;
-  frameEl = null;
+  frameWrapEl = null;
   stepsCreated = 0;
   computeColumns();
   baseY = computeBaseY();
@@ -145,15 +155,6 @@ function animateFall(direction) {
   characterEl.classList.add(direction === "left" ? "fall-left" : "fall-right");
 }
 
-function updateFramePosition(step) {
-  if (!frameEl || !step) return;
-  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
-  const left = step.x + stepWidth / 2 - frameWidth / 2;
-  const top = step.y - frameHeight - 35;
-  frameEl.style.left = `${left}px`;
-  frameEl.style.top = `${top}px`;
-}
-
 function shiftSteps() {
   steps.forEach((step) => {
     step.y += stepGap;
@@ -172,9 +173,6 @@ function shiftSteps() {
   if (stepsCreated <= goalSteps) {
     const newStep = createStep(newIndex, topY - stepGap);
     steps.push(newStep);
-  }
-  if (goalStep) {
-    updateFramePosition(goalStep);
   }
 }
 
@@ -221,9 +219,6 @@ function move(action) {
 
   if (score === goalSteps) {
     gameFinished = true;
-    if (goalStep) {
-      updateFramePosition(goalStep);
-    }
     setTimeout(() => {
       overlayTitleEl.textContent = "Mission Success";
       overlayMessageEl.textContent = "미션 성공!";
