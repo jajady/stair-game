@@ -13,7 +13,7 @@ const stepsVisible = 9;
 const columns = 7;
 const horizontalPadding = 24;
 const characterOffset = 3;
-const baseY = 480;
+const baseY = 560;
 const fallDuration = 520;
 
 let steps = [];

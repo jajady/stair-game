@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -9,19 +9,26 @@
   <body>
     <div class="phone">
       <div class="game">
-        <div class="score">Score: <span id="score">0</span></div>
+        <img
+          src="assets/finding-my-bias-logo_small.png"
+          alt="Finding My Bias"
+          class="logo"
+        />
+        <div class="score">
+          <div class="score-label">SCORE</div>
+          <div class="score-value" id="score">0</div>
+        </div>
         <div class="steps" id="steps"></div>
-        <img src="assets/flying_kiwing.png" alt="Kiwing" class="character" id="character" />
+        <img
+          src="assets/flying_kiwing.png"
+          alt="Kiwing"
+          class="character"
+          id="character"
+        />
         <div class="controls">
           <button class="btn" id="turnBtn" aria-label="방향 전환하고 이동">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 7l-5 5 5 5v-3h10v3l5-5-5-5v3H7V7z" />
-            </svg>
           </button>
           <button class="btn" id="forwardBtn" aria-label="현재 방향으로 이동">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 2l7 7h-4v10h-6V9H5l7-7z" />
-            </svg>
           </button>
         </div>
         <div class="overlay" id="overlay">
