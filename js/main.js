@@ -91,7 +91,7 @@ function positionCharacter(step) {
   if (!step) return;
   const stepHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-height"));
   const charHeight = characterEl.getBoundingClientRect().height || 70;
-  const top = step.y - charHeight + stepHeight - 6;
+  const top = step.y - charHeight + 10;
   characterEl.style.top = `${top}px`;
   updateTrack(step);
 }
