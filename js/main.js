@@ -4,6 +4,8 @@ const characterEl = document.getElementById("character");
 const scoreEl = document.getElementById("score");
 const finalScoreEl = document.getElementById("finalScore");
 const overlayEl = document.getElementById("overlay");
+const overlayTitleEl = document.getElementById("overlayTitle");
+const overlayMessageEl = document.getElementById("overlayMessage");
 const turnBtn = document.getElementById("turnBtn");
 const forwardBtn = document.getElementById("forwardBtn");
 const restartBtn = document.getElementById("restartBtn");
@@ -15,6 +17,10 @@ const horizontalPadding = 24;
 const characterOffset = 3;
 let baseY = 560;
 const fallDuration = 520;
+const goalSteps = 30;
+const successDelay = 900;
+const frameWidth = 107;
+const frameHeight = 138;
 const stepImages = [
   "assets/stair_pink.png",
   "assets/stair-green.png",
@@ -26,6 +32,10 @@ let score = 0;
 let currentDir = "right";
 let busy = false;
 let columnX = [];
+let stepsCreated = 0;
+let goalStep = null;
+let frameEl = null;
+let gameFinished = false;
 
 function computeColumns() {
   const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
@@ -61,7 +71,21 @@ function createStep(colIndex, y) {
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;
   stepsEl.appendChild(el);
-  return { el, x, y, colIndex };
+  const stepNumber = stepsCreated;
+  const isGoal = stepNumber === goalSteps;
+  const step = { el, x, y, colIndex, isGoal };
+  if (isGoal) {
+    goalStep = step;
+    if (!frameEl) {
+      frameEl = document.createElement("img");
+      frameEl.className = "goal-frame";
+      frameEl.src = "assets/frame.png";
+      stepsEl.appendChild(frameEl);
+    }
+    updateFramePosition(step);
+  }
+  stepsCreated += 1;
+  return step;
 }
 
 function getNextColumnIndex(currentIndex) {
@@ -76,11 +100,14 @@ function getNextColumnIndex(currentIndex) {
 function resetSteps() {
   stepsEl.innerHTML = "";
   steps = [];
+  goalStep = null;
+  frameEl = null;
+  stepsCreated = 0;
   computeColumns();
   baseY = computeBaseY();
   let y = baseY;
   let colIndex = Math.floor(Math.random() * columns);
-  for (let i = 0; i < stepsVisible; i += 1) {
+  for (let i = 0; i < stepsVisible && stepsCreated <= goalSteps; i += 1) {
     steps.push(createStep(colIndex, y));
     y -= stepGap;
     colIndex = getNextColumnIndex(colIndex);
@@ -118,6 +145,15 @@ function animateFall(direction) {
   characterEl.classList.add(direction === "left" ? "fall-left" : "fall-right");
 }
 
+function updateFramePosition(step) {
+  if (!frameEl || !step) return;
+  const stepWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--step-width"));
+  const left = step.x + stepWidth / 2 - frameWidth / 2;
+  const top = step.y - frameHeight - 35;
+  frameEl.style.left = `${left}px`;
+  frameEl.style.top = `${top}px`;
+}
+
 function shiftSteps() {
   steps.forEach((step) => {
     step.y += stepGap;
@@ -133,12 +169,17 @@ function shiftSteps() {
   const topY = Math.min(...steps.map((step) => step.y));
   const lastIndex = steps[steps.length - 1].colIndex;
   const newIndex = getNextColumnIndex(lastIndex);
-  const newStep = createStep(newIndex, topY - stepGap);
-  steps.push(newStep);
+  if (stepsCreated <= goalSteps) {
+    const newStep = createStep(newIndex, topY - stepGap);
+    steps.push(newStep);
+  }
+  if (goalStep) {
+    updateFramePosition(goalStep);
+  }
 }
 
 function move(action) {
-  if (busy || overlayEl.classList.contains("show")) return;
+  if (busy || overlayEl.classList.contains("show") || gameFinished) return;
   busy = true;
 
   const nextStep = steps[1];
@@ -160,6 +201,8 @@ function move(action) {
     setDirection(intendedDir);
     animateFall(intendedDir);
     setTimeout(() => {
+      overlayTitleEl.textContent = "Game Over";
+      overlayMessageEl.textContent = "";
       overlayEl.classList.add("show");
       finalScoreEl.textContent = score;
       busy = false;
@@ -169,10 +212,27 @@ function move(action) {
 
   setDirection(requiredDir);
   animateJump();
-  score += 1;
-  scoreEl.textContent = score;
+  const nextScore = score + 1;
   shiftSteps();
   positionCharacter(steps[0]);
+
+  score = nextScore;
+  scoreEl.textContent = score;
+
+  if (score === goalSteps) {
+    gameFinished = true;
+    if (goalStep) {
+      updateFramePosition(goalStep);
+    }
+    setTimeout(() => {
+      overlayTitleEl.textContent = "Mission Success";
+      overlayMessageEl.textContent = "미션 성공!";
+      overlayEl.classList.add("show");
+      finalScoreEl.textContent = score;
+      busy = false;
+    }, successDelay);
+    return;
+  }
 
   setTimeout(() => {
     busy = false;
@@ -183,6 +243,9 @@ function resetGame() {
   score = 0;
   scoreEl.textContent = score;
   overlayEl.classList.remove("show");
+  overlayTitleEl.textContent = "Game Over";
+  overlayMessageEl.textContent = "";
+  gameFinished = false;
   setDirection("right");
   characterEl.classList.remove("fall-left");
   characterEl.classList.remove("fall-right");

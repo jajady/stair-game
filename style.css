@@ -114,6 +114,14 @@ body {
   transition: top 220ms ease-in-out;
 }
 
+.goal-frame {
+  position: absolute;
+  width: 107px;
+  height: 138px;
+  pointer-events: none;
+  z-index: 3;
+}
+
 .character {
   position: absolute;
   width: 70px;
@@ -305,6 +313,11 @@ body {
 .panel h2 {
   margin: 0 0 8px;
   font-size: 20px;
+}
+
+.panel #overlayMessage {
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 
 .panel button {
