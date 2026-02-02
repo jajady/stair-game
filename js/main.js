@@ -13,7 +13,7 @@ const stepsVisible = 9;
 const columns = 7;
 const horizontalPadding = 24;
 const characterOffset = 3;
-const baseY = 560;
+let baseY = 560;
 const fallDuration = 520;
 const stepImages = [
   "assets/stair_pink.png",
@@ -34,6 +34,11 @@ function computeColumns() {
   const gap = columns > 1 ? available / (columns - 1) : 0;
   columnX = Array.from({ length: columns }, (_, index) => horizontalPadding + index * gap);
   stepsEl.style.width = `${trackWidth}px`;
+}
+
+function computeBaseY() {
+  const gameRect = gameEl.getBoundingClientRect();
+  return gameRect.height * 0.7;
 }
 
 function updateTrack(step) {
@@ -72,6 +77,7 @@ function resetSteps() {
   stepsEl.innerHTML = "";
   steps = [];
   computeColumns();
+  baseY = computeBaseY();
   let y = baseY;
   let colIndex = Math.floor(Math.random() * columns);
   for (let i = 0; i < stepsVisible; i += 1) {
@@ -191,6 +197,7 @@ restartBtn.addEventListener("click", resetGame);
 resetGame();
 
 window.addEventListener("resize", () => {
+  baseY = computeBaseY();
   computeColumns();
   positionCharacter(steps[0]);
 });
