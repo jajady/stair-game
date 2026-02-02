@@ -85,10 +85,15 @@ function createStep(colIndex, y) {
       frameImg.className = "goal-frame-img";
       frameImg.src = "assets/frame.png";
 
+      const photoImg = document.createElement("img");
+      photoImg.className = "goal-photo";
+      photoImg.src = "assets/favorite.png";
+
       const starImg = document.createElement("img");
       starImg.className = "goal-star";
       starImg.src = "assets/stars.png";
 
+      frameWrapEl.appendChild(photoImg);
       frameWrapEl.appendChild(frameImg);
       frameWrapEl.appendChild(starImg);
       el.appendChild(frameWrapEl);
