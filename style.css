@@ -34,7 +34,7 @@ body {
 
 .phone {
   width: 100%;
-  height: min(760px, 92vh);
+  height: 100vh;
   border-radius: 0;
   background: transparent;
   position: relative;
@@ -261,6 +261,7 @@ body {
   place-items: center;
   box-shadow: none;
   cursor: pointer;
+  touch-action: manipulation;
   transition: transform 120ms ease;
 }
 
