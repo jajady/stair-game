@@ -8,13 +8,18 @@ const turnBtn = document.getElementById("turnBtn");
 const forwardBtn = document.getElementById("forwardBtn");
 const restartBtn = document.getElementById("restartBtn");
 
-const stepGap = 72;
+const stepGap = 56;
 const stepsVisible = 9;
 const columns = 7;
 const horizontalPadding = 24;
 const characterOffset = 3;
 const baseY = 560;
 const fallDuration = 520;
+const stepImages = [
+  "assets/stair_pink.png",
+  "assets/stair-green.png",
+  "assets/stair-orange.png",
+];
 
 let steps = [];
 let score = 0;
@@ -45,6 +50,8 @@ function updateTrack(step) {
 function createStep(colIndex, y) {
   const el = document.createElement("div");
   el.className = "step";
+  const imgIndex = Math.floor(Math.random() * stepImages.length);
+  el.style.backgroundImage = `url("${stepImages[imgIndex]}")`;
   const x = columnX[colIndex] ?? horizontalPadding;
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;

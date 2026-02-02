@@ -4,9 +4,9 @@
   --button: #9b9b9b;
   --button-dark: #7d7d7d;
   --text: #203020;
-  --step-width: 60px;
-  --step-height: 18px;
-  --step-gap: 72px;
+  --step-width: 70px;
+  --step-height: 30px;
+  --step-gap: 56px;
   --track-width: 560px;
 }
 
@@ -103,9 +103,10 @@ body {
   position: absolute;
   width: var(--step-width);
   height: var(--step-height);
-  background: var(--step);
-  border-radius: 6px;
-  box-shadow: 0 6px 0 rgba(60, 120, 40, 0.2);
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: auto;
   transition: top 220ms ease-in-out;
 }
 
