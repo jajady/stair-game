@@ -159,7 +159,6 @@ body {
   top: 420px;
   transform: translateX(-50%);
   z-index: 4;
-  transition: transform 140ms ease-in-out;
 }
 
 .character.flip {
