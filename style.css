@@ -1,0 +1,607 @@
+:root {
+  --bg: #eef9c8;
+  --step: #86d965;
+  --button: #9b9b9b;
+  --button-dark: #7d7d7d;
+  --text: #203020;
+  --step-width: 70px;
+  --step-height: 30px;
+  --step-gap: 56px;
+  --track-width: 560px;
+}
+
+@font-face {
+  font-family: "DungGeunMo";
+  src: url("./font/DungGeunMo.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background: #a9c6f8;
+  color: var(--text);
+  height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.phone {
+  width: 100%;
+  height: 100vh;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.game {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-image: url("assets/sky.png");
+  background-repeat: no-repeat;
+  background-position: center 60px;
+  background-size: 100% calc(100% - 60px);
+}
+
+.game-header {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #0f0f0f;
+  background: #ffffff;
+  font-family: SUIT, "Trebuchet MS", "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 150%;
+  text-align: center;
+  padding: 16.5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.game-header svg {
+  position: absolute;
+  top: 18px;
+  right: 12px;
+}
+
+.score {
+  position: absolute;
+  top: 86px;
+  right: 18px;
+  font-weight: 700;
+  font-size: 23px;
+  font-family: "DungGeunMo", sans-serif;
+  color: #0f0f0f;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.score-label {
+}
+
+.score-value {
+  font-size: 30px;
+  color: #0f0f0f;
+  text-shadow:
+    2px 0 0 #ffffff,
+    -2px 0 0 #ffffff,
+    0 2px 0 #ffffff,
+    0 -2px 0 #ffffff,
+    2px 2px 0 #ffffff,
+    -2px -2px 0 #ffffff,
+    -2px 2px 0 #ffffff,
+    2px -2px 0 #ffffff,
+    0 2px 2px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  position: absolute;
+  top: 90px;
+  left: 20px;
+  transform: scale(0.5);
+  transform-origin: top left;
+  z-index: 7;
+}
+
+.steps {
+  position: absolute;
+  inset: 0;
+  width: var(--track-width);
+  left: 0;
+  transition: transform 220ms ease-in-out;
+  will-change: transform;
+  z-index: 5;
+}
+
+.step {
+  position: absolute;
+  width: var(--step-width);
+  height: var(--step-height);
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: auto;
+  transition: top 220ms ease-in-out;
+}
+
+.goal-frame-wrap {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.goal-frame-wrap.is-hidden {
+  opacity: 0;
+}
+
+.goal-photo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 134px;
+  height: 134px;
+  object-fit: cover;
+  border-radius: 10px;
+  z-index: 1;
+}
+
+.goal-frame-img {
+  display: block;
+  width: 200px;
+  height: 200px;
+  position: relative;
+  z-index: 2;
+}
+
+.goal-frame-title {
+  position: absolute;
+  top: 203px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "DungGeunMo", "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 40px;
+  line-height: 1;
+  color: #0f0f0f;
+  text-shadow:
+    2px 0 0 #FFE5F1,
+    -2px 0 0 #FFE5F1,
+    0 2px 0 #FFE5F1,
+    0 -2px 0 #FFE5F1,
+    2px 2px 0 #FFE5F1,
+    -2px -2px 0 #FFE5F1,
+    -2px 2px 0 #FFE5F1,
+    2px -2px 0 #FFE5F1,
+    0 4px 4px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  text-align: center;
+  z-index: 2;
+}
+
+
+.character {
+  position: absolute;
+  width: 70px;
+  left: 50%;
+  top: 420px;
+  transform: translateX(-50%);
+  z-index: 6;
+}
+
+.character.is-spin {
+  width: 133px;
+  margin-top: -70px;
+}
+.character.flip {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.character.jump {
+  animation: jump 220ms ease-in-out;
+}
+
+.character.fall-left {
+  animation: jump-fall-left 520ms ease-in forwards;
+}
+
+.character.fall-right {
+  animation: jump-fall-right 520ms ease-in forwards;
+}
+
+.curtain {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  --curtain-offset: 0px;
+  transform: translate(-100%, -100%);
+  transform-origin: center;
+  z-index: 4;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 300ms ease-in-out, opacity 200ms ease;
+}
+
+.curtain.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.curtain--left {
+  left: calc(50% + 5px);
+  transform: translate(-100%, -100%) translateY(var(--curtain-offset))
+    scaleX(-1);
+}
+
+.curtain--right {
+  left: calc(50% - 5px);
+  transform: translate(0, -100%) translateY(var(--curtain-offset));
+}
+
+.curtain.is-open.curtain--left {
+  transform: translate(-200%, -100%) translateY(var(--curtain-offset))
+    scaleX(-1);
+}
+
+.curtain.is-open.curtain--right {
+  transform: translate(100%, -100%) translateY(var(--curtain-offset));
+}
+
+.curtain.is-open {
+  transition: transform 1000ms ease, opacity 200ms ease;
+}
+
+.frame-decor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.frame-decor-item {
+  position: absolute;
+  width: 80px;
+  height: auto;
+  transform: translate(-50%, -50%) scale(var(--scale, 0.5));
+  animation: decor-float var(--float-duration, 2.4s) ease-in-out infinite;
+}
+
+@keyframes decor-float {
+  0% {
+    transform: translate(-50%, calc(-50% - var(--float-distance, 6px)))
+      scale(var(--scale, 0.5));
+  }
+  50% {
+    transform: translate(-50%, calc(-50% + var(--float-distance, 6px)))
+      scale(var(--scale, 0.5));
+  }
+  100% {
+    transform: translate(-50%, calc(-50% - var(--float-distance, 6px)))
+      scale(var(--scale, 0.5));
+  }
+}
+
+.confetti-burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.confetti-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(var(--scale, 1));
+  animation: confetti-burst 600ms cubic-bezier(0.1, 0.9, 0.3, 1) forwards;
+}
+
+.found-bubble {
+  position: absolute;
+  height: 40px;
+  width: auto;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 200ms ease, transform 200ms ease;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.found-bubble.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.found-bubble--left {
+  transform: translate(-100%, 6px);
+}
+
+.found-bubble--left.is-visible {
+  transform: translate(-100%, 0);
+}
+
+@keyframes confetti-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(var(--scale, 1)) rotate(var(--rot));
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
+      rotate(var(--rot)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+@keyframes jump {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-26px);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.character.flip.jump {
+  animation: jump-flip 220ms ease-in-out;
+}
+
+.character.flip.fall-left {
+  animation: jump-fall-left-flip 520ms ease-in forwards;
+}
+
+.character.flip.fall-right {
+  animation: jump-fall-right-flip 520ms ease-in forwards;
+}
+
+@keyframes jump-flip {
+  0% {
+    transform: translateX(-50%) scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) scaleX(-1) translateY(-26px);
+  }
+  100% {
+    transform: translateX(-50%) scaleX(-1) translateY(0);
+  }
+}
+
+@keyframes jump-fall-left {
+  0% {
+    transform: translateX(-50%) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-50%) translateX(-22px) translateY(-24px) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateX(-34px) translateY(150px)
+      rotate(20deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes jump-fall-right {
+  0% {
+    transform: translateX(-50%) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-50%) translateX(22px) translateY(-24px) rotate(-6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateX(34px) translateY(150px)
+      rotate(-20deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes jump-fall-left-flip {
+  0% {
+    transform: translateX(-50%) scaleX(-1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-50%) scaleX(-1) translateX(22px) translateY(-24px)
+      rotate(-6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scaleX(-1) translateX(34px) translateY(150px)
+      rotate(-20deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes jump-fall-right-flip {
+  0% {
+    transform: translateX(-50%) scaleX(-1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-50%) scaleX(-1) translateX(-22px) translateY(-24px)
+      rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scaleX(-1) translateX(-34px) translateY(150px)
+      rotate(20deg);
+    opacity: 0.2;
+  }
+}
+
+.controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  z-index: 6;
+}
+
+.btn {
+  width: 96px;
+  height: 100px;
+  border-radius: 18px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: none;
+  display: grid;
+  place-items: center;
+  box-shadow: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 120ms ease;
+}
+
+.btn:active {
+  transform: translateY(2px);
+}
+
+#turnBtn {
+  background-image: url("assets/btn/switch_btn.png");
+}
+
+#forwardBtn {
+  background-image: url("assets/btn/up_btn.png");
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+  z-index: 100;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.panel {
+  background: #ffffff;
+  padding: 20px 28px;
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  z-index: 110;
+  font-family: "DungGeunMo", "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.panel #overlayMessage {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.panel button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: #333;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.exit-modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 20;
+}
+
+.exit-modal.hidden {
+  display: none;
+}
+
+.exit-modal__panel {
+  width: 320px;
+  background: #ffffff;
+  box-shadow:
+    -4px -4px 4px 0px #dfdfdf inset,
+    0px 1px 4px 0px #00000033;
+  border-radius: 20px;
+  padding: 40px 24px 24px;
+  text-align: center;
+}
+
+.exit-modal__title {
+  font-family: DungGeunMo, "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 22px;
+  line-height: 150%;
+  color: #0f0f0f;
+  margin: 0 0 24px;
+}
+
+.exit-modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.exit-modal__btn {
+  width: 132px;
+  height: 56px;
+  box-shadow:
+    0px 4px 4px 0px #0000001a,
+    -4px -4px 4px 0px #0000001a inset;
+  background: #dde4e6;
+  cursor: pointer;
+  color: #0f0f0f;
+  font-family: DungGeunMo, "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 18px;
+  line-height: 150%;
+  text-align: center;
+  border: none;
+  border-radius: 10px;
+}
+
+.exit-modal__btn.is-confirm {
+  background: #dffd55;
+}

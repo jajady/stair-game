@@ -1,0 +1,114 @@
+﻿<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Kiwing Stair</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="phone">
+      <div class="game">
+        <img
+          src="assets/finding-my-bias-logo_small.png"
+          alt="Finding My Bias"
+          class="logo"
+        />
+        <div class="score">
+          <div class="score-label">SCORE</div>
+          <div class="score-value" id="score">0</div>
+        </div>
+        <div class="steps" id="steps"></div>
+        <img
+          src="assets/flying_kiwing.png"
+          alt="Kiwing"
+          class="character"
+          id="character"
+        />
+        <img
+          src="assets/curtain_pink.png"
+          alt="Curtain Left"
+          class="curtain curtain--left"
+          id="curtain-left"
+        />
+        <img
+          src="assets/curtain_pink.png"
+          alt="Curtain Right"
+          class="curtain curtain--right"
+          id="curtain-right"
+        />
+        <div class="controls">
+          <button
+            class="btn"
+            id="turnBtn"
+            aria-label="방향 전환하고 이동"
+          ></button>
+          <button
+            class="btn"
+            id="forwardBtn"
+            aria-label="현재 방향으로 이동"
+          ></button>
+        </div>
+        <div class="overlay" id="overlay">
+          <div class="panel">
+            <h2 id="overlayTitle">Game Over</h2>
+            <div id="overlayMessage"></div>
+            <div>Score: <span id="finalScore">0</span></div>
+            <button id="restartBtn">다시 시작</button>
+          </div>
+        </div>
+      </div>
+      <div class="game-header">
+        놀아주기
+        <svg
+          id="exit-btn"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M19 5.00391L5 19.004"
+            stroke="#0F0F0F"
+            stroke-width="2.00001"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M5 5.00391L19 19.004"
+            stroke="#0F0F0F"
+            stroke-width="2.00001"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+      <div class="exit-modal hidden" id="exit-modal">
+        <div class="exit-modal__panel">
+          <p class="exit-modal__title">게임을 종료할까요?</p>
+          <div class="exit-modal__actions">
+            <button
+              class="exit-modal__btn is-cancel"
+              id="exit-cancel"
+              type="button"
+            >
+              아니오
+            </button>
+            <button
+              class="exit-modal__btn is-confirm"
+              id="exit-confirm"
+              type="button"
+            >
+              네
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/main.js"></script>
+  </body>
+</html>
