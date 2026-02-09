@@ -106,14 +106,20 @@ function spawnConfettiBurst() {
     decorWrapEl.parentElement.removeChild(decorWrapEl);
   }
 
-  const frameRect = frameWrapEl.getBoundingClientRect();
+  const frameWrapRect = frameWrapEl.getBoundingClientRect();
   const gameRect = gameEl.getBoundingClientRect();
-  const centerX = frameRect.left - gameRect.left + frameRect.width / 2;
-  const centerY = frameRect.top - gameRect.top + frameRect.height / 2;
-  const frameLeft = frameRect.left - gameRect.left;
-  const frameTop = frameRect.top - gameRect.top;
-  const frameWidth = frameRect.width;
-  const frameHeight = frameRect.height;
+  const centerX =
+    frameWrapRect.left - gameRect.left + frameWrapRect.width / 2;
+  const centerY = frameWrapRect.top - gameRect.top + frameWrapRect.height / 2;
+
+  const frameImgEl = frameWrapEl.querySelector(".goal-frame-img");
+  const frameImgRect = frameImgEl
+    ? frameImgEl.getBoundingClientRect()
+    : frameWrapRect;
+  const frameLeft = frameImgRect.left - frameWrapRect.left;
+  const frameTop = frameImgRect.top - frameWrapRect.top;
+  const frameWidth = frameImgRect.width;
+  const frameHeight = frameImgRect.height;
 
   const confettiOffsets = [
     { dx: -140, dy: 120, rot: 0, scale: 1.0 },
@@ -226,7 +232,7 @@ function spawnConfettiBurst() {
     decorWrapEl.appendChild(deco);
   });
 
-  gameEl.appendChild(decorWrapEl);
+  frameWrapEl.appendChild(decorWrapEl);
 
   setTimeout(() => {
     showFoundBubble();
