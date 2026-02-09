@@ -106,20 +106,19 @@ function spawnConfettiBurst() {
     decorWrapEl.parentElement.removeChild(decorWrapEl);
   }
 
-  const frameWrapRect = frameWrapEl.getBoundingClientRect();
   const gameRect = gameEl.getBoundingClientRect();
+  const frameWrapRect = frameWrapEl.getBoundingClientRect();
   const centerX =
     frameWrapRect.left - gameRect.left + frameWrapRect.width / 2;
   const centerY = frameWrapRect.top - gameRect.top + frameWrapRect.height / 2;
 
   const frameImgEl = frameWrapEl.querySelector(".goal-frame-img");
-  const frameImgRect = frameImgEl
-    ? frameImgEl.getBoundingClientRect()
-    : frameWrapRect;
-  const frameLeft = frameImgRect.left - frameWrapRect.left;
-  const frameTop = frameImgRect.top - frameWrapRect.top;
-  const frameWidth = frameImgRect.width;
-  const frameHeight = frameImgRect.height;
+  const frameLeft = frameImgEl ? frameImgEl.offsetLeft : 0;
+  const frameTop = frameImgEl ? frameImgEl.offsetTop : 0;
+  const frameWidth = frameImgEl ? frameImgEl.offsetWidth : frameWrapEl.offsetWidth;
+  const frameHeight = frameImgEl
+    ? frameImgEl.offsetHeight
+    : frameWrapEl.offsetHeight;
 
   const confettiOffsets = [
     { dx: -140, dy: 120, rot: 0, scale: 1.0 },
@@ -136,8 +135,8 @@ function spawnConfettiBurst() {
 
   confettiWrapEl = document.createElement("div");
   confettiWrapEl.className = "confetti-burst";
-  confettiWrapEl.style.left = `${centerX}px`;
-  confettiWrapEl.style.top = `${centerY}px`;
+  confettiWrapEl.style.left = `${Math.round(centerX)}px`;
+  confettiWrapEl.style.top = `${Math.round(centerY)}px`;
 
   for (let i = 0; i < confettiCount; i += 1) {
     const piece = document.createElement("img");
@@ -212,17 +211,17 @@ function spawnConfettiBurst() {
 
   decorWrapEl = document.createElement("div");
   decorWrapEl.className = "frame-decor";
-  decorWrapEl.style.left = `${frameLeft}px`;
-  decorWrapEl.style.top = `${frameTop}px`;
-  decorWrapEl.style.width = `${frameWidth}px`;
-  decorWrapEl.style.height = `${frameHeight}px`;
+  decorWrapEl.style.left = `${Math.round(frameLeft)}px`;
+  decorWrapEl.style.top = `${Math.round(frameTop)}px`;
+  decorWrapEl.style.width = `${Math.round(frameWidth)}px`;
+  decorWrapEl.style.height = `${Math.round(frameHeight)}px`;
 
   decorItems.forEach((item, index) => {
     const deco = document.createElement("img");
     deco.className = "frame-decor-item";
     deco.src = item.src;
-    deco.style.left = `${item.x}px`;
-    deco.style.top = `${item.y}px`;
+    deco.style.left = `${Math.round(item.x)}px`;
+    deco.style.top = `${Math.round(item.y)}px`;
     deco.style.setProperty("--scale", `${item.scale}`);
     const baseDuration = 2.2 + index * 0.25;
     deco.style.setProperty("--float-duration", `${baseDuration / 2}s`);
