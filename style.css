@@ -238,10 +238,6 @@ body {
   visibility: hidden;
   pointer-events: none;
   transition: transform 300ms ease-in-out, opacity 200ms ease;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
 }
 
 .curtain.is-visible {
@@ -251,22 +247,20 @@ body {
 
 .curtain--left {
   left: calc(50% + 5px);
-  transform: translate3d(-100%, -100%, 0) translateY(var(--curtain-offset))
-    scaleX(-1);
+  transform: translate(-100%, -100%) translateY(var(--curtain-offset));
 }
 
 .curtain--right {
   left: calc(50% - 5px);
-  transform: translate3d(0, -100%, 0) translateY(var(--curtain-offset));
+  transform: translate(0, -100%) translateY(var(--curtain-offset));
 }
 
 .curtain.is-open.curtain--left {
-  transform: translate3d(-200%, -100%, 0) translateY(var(--curtain-offset))
-    scaleX(-1);
+  transform: translate(-200%, -100%) translateY(var(--curtain-offset));
 }
 
 .curtain.is-open.curtain--right {
-  transform: translate3d(100%, -100%, 0) translateY(var(--curtain-offset));
+  transform: translate(100%, -100%) translateY(var(--curtain-offset));
 }
 
 .curtain.is-open {
