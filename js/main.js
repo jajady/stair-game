@@ -557,14 +557,14 @@ function move(action) {
 
   if (score === goalSteps) {
     gameFinished = true;
-    if (frameWrapEl) {
-      frameWrapEl.classList.remove("is-hidden");
-    }
     setFacingByScreenPosition();
     setCurtainsVisible(true);
     setCurtainsOpen(false);
     setTimeout(() => {
       setCurtainsOpen(true);
+      if (frameWrapEl) {
+        frameWrapEl.classList.remove("is-hidden");
+      }
     }, curtainOpenDelay);
     setTimeout(() => {
       spawnConfettiBurst();
