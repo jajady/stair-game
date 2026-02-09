@@ -326,6 +326,11 @@ function readCssNumber(variable, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function isShortScreen() {
+  const gameRect = gameEl.getBoundingClientRect();
+  return gameRect.height <= 750;
+}
+
 function updateTrack(step) {
   if (!step) return;
   const gameRect = gameEl.getBoundingClientRect();
@@ -526,7 +531,7 @@ function move(action) {
   const requiredDir =
     nextStep.colIndex > currentStep.colIndex ? "right" : "left";
   const isCorrect = intendedDir === requiredDir;
-  const lockTrack = score >= goalSteps - finalPhaseSteps;
+  const lockTrack = score >= goalSteps - finalPhaseSteps && !isShortScreen();
 
   if (!isCorrect) {
     setDirection(intendedDir);
