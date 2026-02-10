@@ -240,6 +240,10 @@ body {
   transition: transform 300ms ease-in-out, opacity 200ms ease;
 }
 
+.curtain.no-transition {
+  transition: none !important;
+}
+
 .curtain.is-visible {
   opacity: 1;
   visibility: visible;

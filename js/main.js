@@ -41,6 +41,7 @@ const fallDuration = 520;
 const goalSteps = 50;
 const curtainOpenDelay = 300;
 const curtainOpenDuration = 1000;
+const curtainRevealSteps = 7;
 const confettiBurstDelay = curtainOpenDelay + curtainOpenDuration * 0.1;
 const confettiDuration = 600;
 const decorDuration = null;
@@ -95,6 +96,28 @@ function setCurtainsVisible(isVisible) {
   if (isVisible) {
     updateCurtainPosition();
   }
+}
+
+function revealCurtainsIfNeeded() {
+  if (!goalStep) return;
+  if (score < goalSteps - curtainRevealSteps) return;
+  const isVisible =
+    curtainLeft?.classList.contains("is-visible") ||
+    curtainRight?.classList.contains("is-visible");
+  if (isVisible) return;
+
+  [curtainLeft, curtainRight].forEach((curtain) => {
+    if (!curtain) return;
+    curtain.classList.add("no-transition");
+  });
+  setCurtainsVisible(true);
+  setCurtainsOpen(false);
+  requestAnimationFrame(() => {
+    [curtainLeft, curtainRight].forEach((curtain) => {
+      if (!curtain) return;
+      curtain.classList.remove("no-transition");
+    });
+  });
 }
 
 function spawnConfettiBurst() {
@@ -399,8 +422,6 @@ function createStep(colIndex, y) {
       gameEl.appendChild(frameWrapEl);
       updateGoalFramePosition();
     }
-    setCurtainsVisible(true);
-    setCurtainsOpen(false);
   }
   stepsCreated += 1;
   return step;
@@ -564,6 +585,7 @@ function move(action) {
 
   score = nextScore;
   scoreEl.textContent = score;
+  revealCurtainsIfNeeded();
 
   if (score === goalSteps) {
     gameFinished = true;
@@ -608,6 +630,10 @@ function resetGame() {
   }
   setCurtainsVisible(false);
   setCurtainsOpen(false);
+  [curtainLeft, curtainRight].forEach((curtain) => {
+    if (!curtain) return;
+    curtain.classList.remove("no-transition");
+  });
   if (confettiWrapEl && confettiWrapEl.parentElement) {
     confettiWrapEl.parentElement.removeChild(confettiWrapEl);
   }
