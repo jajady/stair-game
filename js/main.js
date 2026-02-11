@@ -2,13 +2,25 @@ const gameEl = document.querySelector(".game");
 const stepsEl = document.getElementById("steps");
 const characterEl = document.getElementById("character");
 const scoreEl = document.getElementById("score");
-const finalScoreEl = document.getElementById("finalScore");
+const timerEl = document.getElementById("timer");
 const overlayEl = document.getElementById("overlay");
-const overlayTitleEl = document.getElementById("overlayTitle");
-const overlayMessageEl = document.getElementById("overlayMessage");
+const overlayGameoverEl = document.getElementById("overlay-gameover");
+const overlayGameoverTitleEl = document.getElementById(
+  "overlay-gameover-title",
+);
+const overlayStatLabel1El = document.getElementById("overlay-stat-label-1");
+const overlayStatValue1El = document.getElementById("overlay-stat-value-1");
+const overlayStatLabel2El = document.getElementById("overlay-stat-label-2");
+const overlayStatValue2El = document.getElementById("overlay-stat-value-2");
+const overlayStatLabel3El = document.getElementById("overlay-stat-label-3");
+const overlayStatValue3El = document.getElementById("overlay-stat-value-3");
+const overlayRankingListEl = document.getElementById("overlay-ranking-list");
 const turnBtn = document.getElementById("turnBtn");
 const forwardBtn = document.getElementById("forwardBtn");
-const restartBtn = document.getElementById("restartBtn");
+const startBtn = document.getElementById("start-btn");
+const failModal = document.getElementById("fail-modal");
+const failRetryBtn = document.getElementById("fail-retry-btn");
+const failScoreValueEl = document.getElementById("fail-score-value");
 const curtainLeft = document.getElementById("curtain-left");
 const curtainRight = document.getElementById("curtain-right");
 const exitBtn = document.getElementById("exit-btn");
@@ -17,19 +29,6 @@ const exitConfirm = document.getElementById("exit-confirm");
 const exitCancel = document.getElementById("exit-cancel");
 const characterDefaultSrc = characterEl ? characterEl.src : "";
 const characterSpinSrc = "assets/spin_fast40.gif";
-let spinPreload = null;
-let spinRequestId = 0;
-
-function preloadSpinGif() {
-  if (spinPreload) return spinPreload;
-  spinPreload = new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = characterSpinSrc;
-  });
-  return spinPreload;
-}
 
 let stepGap = 56;
 const stepsVisible = 9;
@@ -41,13 +40,14 @@ const fallDuration = 520;
 const goalSteps = 50;
 const curtainOpenDelay = 300;
 const curtainOpenDuration = 1000;
-const curtainRevealSteps = 7;
 const confettiBurstDelay = curtainOpenDelay + curtainOpenDuration * 0.1;
 const confettiDuration = 600;
 const decorDuration = null;
 const foundBubbleDelay = Math.max(0, confettiDuration - 120);
 const confettiCount = 5;
 const successDelay = curtainOpenDelay + curtainOpenDuration + 3000;
+const normalCharacterHeight = 70;
+const spinCharacterHeight = 236;
 const frameOffsetFromStep = 120;
 const frameHeight = 200;
 const finalPhaseSteps = 1;
@@ -69,16 +69,252 @@ let frameWrapEl = null;
 let confettiWrapEl = null;
 let decorWrapEl = null;
 let foundBubbleEl = null;
+let spinCharacterEl = null;
 let gameFinished = false;
+let gameStarted = false;
 let favoriteImageUrl = null;
+let favoriteTitleText = "";
+let timerRafId = null;
+let timerStartAt = 0;
+let elapsedMs = 0;
+let isTimerRunning = false;
+let latestApiGameTimeMs = null;
+let latestApiGameRank = null;
+let latestApiTopList = [];
+let latestOverlaySummary = null;
 
-function applyFavoriteImage(url) {
-  if (!url) return;
-  favoriteImageUrl = url;
-  if (frameWrapEl) {
-    const photoEl = frameWrapEl.querySelector(".goal-photo");
-    if (photoEl) photoEl.src = url;
+function formatElapsedTime(ms) {
+  const safeMs = Math.max(0, Math.floor(ms));
+  const minutes = Math.floor(safeMs / 60000);
+  const seconds = Math.floor((safeMs % 60000) / 1000);
+  const hundredths = Math.floor((safeMs % 1000) / 10);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(hundredths).padStart(2, "0")}`;
+}
+
+function formatElapsedSeconds(ms) {
+  const safeMs = Math.max(0, Math.floor(ms));
+  return (Math.floor(safeMs / 10) / 100).toFixed(2);
+}
+
+function formatAdaptiveRankingTime(ms) {
+  const safeMs = Math.max(0, Math.floor(ms));
+  if (safeMs >= 60000) {
+    return formatElapsedTime(safeMs);
   }
+  return formatElapsedSeconds(safeMs);
+}
+
+function updateTimerDisplay(ms) {
+  if (!timerEl) return;
+  timerEl.textContent = formatElapsedTime(ms);
+}
+
+function formatScore(value) {
+  return String(Math.max(0, Math.floor(value))).padStart(2, "0");
+}
+
+function normalizeApiTimeToMs(rawValue) {
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed <= 0) return null;
+  if (parsed >= 1000) return Math.round(parsed);
+  return Math.round(parsed * 1000);
+}
+
+function formatRankByRule(gameTimeMs, gameRank) {
+  if (!Number.isFinite(gameTimeMs)) return "없음";
+  if (gameRank === null || gameRank === undefined || gameRank === "") {
+    return "5위 밖";
+  }
+  const parsedRank = Number(gameRank);
+  if (!Number.isFinite(parsedRank)) return "없음";
+  return `${parsedRank}위`;
+}
+
+function isTopFiveRankText(text) {
+  return (
+    text === "1ST" ||
+    text === "2ND" ||
+    text === "3RD" ||
+    text === "4TH" ||
+    text === "5TH"
+  );
+}
+
+function setOverlayStatRows(row1, row2, row3) {
+  if (overlayStatLabel1El) overlayStatLabel1El.textContent = row1.label;
+  if (overlayStatValue1El) {
+    overlayStatValue1El.textContent = row1.value;
+    overlayStatValue1El.classList.toggle("rank-out", Boolean(row1.isOut));
+  }
+
+  if (overlayStatLabel2El) overlayStatLabel2El.textContent = row2.label;
+  if (overlayStatValue2El) {
+    overlayStatValue2El.textContent = row2.value;
+    overlayStatValue2El.classList.toggle("rank-out", Boolean(row2.isOut));
+  }
+
+  if (overlayStatLabel3El) overlayStatLabel3El.textContent = row3.label;
+  if (overlayStatValue3El) {
+    overlayStatValue3El.textContent = row3.value;
+    overlayStatValue3El.classList.toggle("rank-out", Boolean(row3.isOut));
+  }
+}
+
+function renderRankingList() {
+  if (!overlayRankingListEl) return;
+
+  overlayRankingListEl.textContent = "";
+  latestApiTopList.slice(0, 5).forEach((item, index) => {
+    const li = document.createElement("li");
+    const rankEl = document.createElement("span");
+    const nicknameEl = document.createElement("span");
+    const timeEl = document.createElement("span");
+
+    const rankLabel = `${index + 1}${["ST", "ND", "RD"][index] || "TH"}`;
+    if (index < 3) {
+      const medal = document.createElement("img");
+      medal.src = `../jump-kiwing/assets/game_medal${index + 1}.png`;
+      medal.alt = "";
+      medal.className = "rank-medal";
+      rankEl.appendChild(medal);
+    }
+    rankEl.appendChild(document.createTextNode(rankLabel));
+
+    nicknameEl.className = "ranking-nickname";
+    nicknameEl.textContent = item?.nickname ?? "";
+
+    const gameTimeMs = normalizeApiTimeToMs(item?.gameTime);
+    timeEl.textContent = Number.isFinite(gameTimeMs)
+      ? formatAdaptiveRankingTime(gameTimeMs)
+      : "--";
+
+    li.appendChild(rankEl);
+    li.appendChild(nicknameEl);
+    li.appendChild(timeEl);
+    overlayRankingListEl.appendChild(li);
+  });
+}
+
+function getClearBestText() {
+  if (!Number.isFinite(latestApiGameTimeMs)) return "없음";
+  return formatAdaptiveRankingTime(latestApiGameTimeMs);
+}
+
+function getRankText() {
+  return formatRankByRule(latestApiGameTimeMs, latestApiGameRank);
+}
+
+function refreshOverlayStats() {
+  if (!latestOverlaySummary) return;
+
+  const { isClear, finalScore, finalElapsedMs } = latestOverlaySummary;
+  const clearBestText = getClearBestText();
+  const rankText = getRankText();
+
+  if (isClear) {
+    setOverlayStatRows(
+      { label: "TIME", value: formatAdaptiveRankingTime(finalElapsedMs) },
+      {
+        label: "BEST RECORD",
+        value: clearBestText,
+        isOut: clearBestText === "없음",
+      },
+      { label: "RANK", value: rankText, isOut: !isTopFiveRankText(rankText) },
+    );
+    return;
+  }
+
+  const hasClearBest = clearBestText !== "없음";
+  setOverlayStatRows(
+    { label: "SCORE", value: formatScore(finalScore) },
+    { label: "BEST RECORD", value: clearBestText, isOut: !hasClearBest },
+    {
+      label: "RANK",
+      value: hasClearBest ? rankText : "없음",
+      isOut: !hasClearBest || !isTopFiveRankText(rankText),
+    },
+  );
+}
+
+function getElapsedMs() {
+  if (!isTimerRunning) return elapsedMs;
+  return elapsedMs + (performance.now() - timerStartAt);
+}
+
+function timerTick() {
+  updateTimerDisplay(getElapsedMs());
+  timerRafId = requestAnimationFrame(timerTick);
+}
+
+function startTimer() {
+  if (isTimerRunning) return;
+  isTimerRunning = true;
+  timerStartAt = performance.now();
+  timerRafId = requestAnimationFrame(timerTick);
+}
+
+function stopTimer() {
+  if (!isTimerRunning) {
+    updateTimerDisplay(elapsedMs);
+    return elapsedMs;
+  }
+  elapsedMs += performance.now() - timerStartAt;
+  isTimerRunning = false;
+  if (timerRafId !== null) {
+    cancelAnimationFrame(timerRafId);
+    timerRafId = null;
+  }
+  updateTimerDisplay(elapsedMs);
+  return elapsedMs;
+}
+
+function resetTimer() {
+  if (timerRafId !== null) {
+    cancelAnimationFrame(timerRafId);
+    timerRafId = null;
+  }
+  timerStartAt = 0;
+  elapsedMs = 0;
+  isTimerRunning = false;
+  updateTimerDisplay(0);
+}
+
+function applyFavoriteMeta({ image, name }) {
+  if (typeof image === "string" && image.trim()) {
+    favoriteImageUrl = image;
+  }
+  if (typeof name === "string" && name.trim()) {
+    favoriteTitleText = name.trim();
+  }
+  if (!frameWrapEl) return;
+
+  const photoEl = frameWrapEl.querySelector(".goal-photo");
+  if (photoEl && favoriteImageUrl) {
+    photoEl.src = favoriteImageUrl;
+  }
+
+  const titleEl = frameWrapEl.querySelector(".goal-frame-title");
+  if (titleEl) {
+    titleEl.textContent = favoriteTitleText || "ALLDAY PROJECT";
+  }
+}
+
+function ensureSpinCharacterLayer() {
+  if (spinCharacterEl || !gameEl || !characterEl) return;
+
+  spinCharacterEl = document.createElement("img");
+  spinCharacterEl.id = "character-spin";
+  spinCharacterEl.className = "character is-spin character-spin-layer";
+  spinCharacterEl.src = characterSpinSrc;
+  spinCharacterEl.alt = "";
+  spinCharacterEl.setAttribute("aria-hidden", "true");
+
+  gameEl.appendChild(spinCharacterEl);
+}
+
+function isSpinVisible() {
+  return Boolean(spinCharacterEl?.classList.contains("is-visible"));
 }
 
 function setCurtainsOpen(isOpen) {
@@ -98,28 +334,6 @@ function setCurtainsVisible(isVisible) {
   }
 }
 
-function revealCurtainsIfNeeded() {
-  if (!goalStep) return;
-  if (score < goalSteps - curtainRevealSteps) return;
-  const isVisible =
-    curtainLeft?.classList.contains("is-visible") ||
-    curtainRight?.classList.contains("is-visible");
-  if (isVisible) return;
-
-  [curtainLeft, curtainRight].forEach((curtain) => {
-    if (!curtain) return;
-    curtain.classList.add("no-transition");
-  });
-  setCurtainsVisible(true);
-  setCurtainsOpen(false);
-  requestAnimationFrame(() => {
-    [curtainLeft, curtainRight].forEach((curtain) => {
-      if (!curtain) return;
-      curtain.classList.remove("no-transition");
-    });
-  });
-}
-
 function spawnConfettiBurst() {
   if (!frameWrapEl) return;
   if (confettiWrapEl && confettiWrapEl.parentElement) {
@@ -131,14 +345,15 @@ function spawnConfettiBurst() {
 
   const gameRect = gameEl.getBoundingClientRect();
   const frameWrapRect = frameWrapEl.getBoundingClientRect();
-  const centerX =
-    frameWrapRect.left - gameRect.left + frameWrapRect.width / 2;
+  const centerX = frameWrapRect.left - gameRect.left + frameWrapRect.width / 2;
   const centerY = frameWrapRect.top - gameRect.top + frameWrapRect.height / 2;
 
   const frameImgEl = frameWrapEl.querySelector(".goal-frame-img");
   const frameLeft = frameImgEl ? frameImgEl.offsetLeft : 0;
   const frameTop = frameImgEl ? frameImgEl.offsetTop : 0;
-  const frameWidth = frameImgEl ? frameImgEl.offsetWidth : frameWrapEl.offsetWidth;
+  const frameWidth = frameImgEl
+    ? frameImgEl.offsetWidth
+    : frameWrapEl.offsetWidth;
   const frameHeight = frameImgEl
     ? frameImgEl.offsetHeight
     : frameWrapEl.offsetHeight;
@@ -279,16 +494,10 @@ function spawnConfettiBurst() {
 
 function showFoundBubble() {
   if (!characterEl) return;
+  ensureSpinCharacterLayer();
   if (foundBubbleEl && foundBubbleEl.parentElement) {
     foundBubbleEl.parentElement.removeChild(foundBubbleEl);
   }
-  const currentRequestId = (spinRequestId += 1);
-  preloadSpinGif().then((loaded) => {
-    if (!loaded || !characterEl) return;
-    if (currentRequestId !== spinRequestId) return;
-    characterEl.src = characterSpinSrc;
-    characterEl.classList.add("is-spin");
-  });
 
   const gameRect = gameEl.getBoundingClientRect();
   const charRect = characterEl.getBoundingClientRect();
@@ -320,6 +529,16 @@ function showFoundBubble() {
       foundBubbleEl.classList.add("is-visible");
     }
   });
+
+  if (spinCharacterEl && steps[0]) {
+    spinCharacterEl.classList.toggle(
+      "flip",
+      characterEl.classList.contains("flip"),
+    );
+    positionSpinCharacterOnStep(steps[0]);
+    spinCharacterEl.classList.add("is-visible");
+    characterEl.classList.add("character-main-hidden");
+  }
 }
 
 function computeColumns() {
@@ -414,7 +633,7 @@ function createStep(colIndex, y) {
 
       const titleEl = document.createElement("div");
       titleEl.className = "goal-frame-title";
-      titleEl.textContent = "ALLDAY PROJECT";
+      titleEl.textContent = favoriteTitleText || "ALLDAY PROJECT";
 
       frameWrapEl.appendChild(photoImg);
       frameWrapEl.appendChild(frameImg);
@@ -422,6 +641,8 @@ function createStep(colIndex, y) {
       gameEl.appendChild(frameWrapEl);
       updateGoalFramePosition();
     }
+    setCurtainsVisible(true);
+    setCurtainsOpen(false);
   }
   stepsCreated += 1;
   return step;
@@ -460,6 +681,9 @@ function resetSteps() {
 function setDirection(dir) {
   currentDir = dir;
   characterEl.classList.toggle("flip", currentDir === "left");
+  if (isSpinVisible()) {
+    spinCharacterEl?.classList.toggle("flip", currentDir === "left");
+  }
 }
 
 function setFacingByScreenPosition() {
@@ -469,17 +693,19 @@ function setFacingByScreenPosition() {
   const charCenter = charRect.left + charRect.width / 2;
   const shouldFlip = charCenter >= gameCenter;
   characterEl.classList.toggle("flip", shouldFlip);
+  if (isSpinVisible()) {
+    spinCharacterEl?.classList.toggle("flip", shouldFlip);
+  }
   currentDir = shouldFlip ? "left" : "right";
+}
+
+function getCharacterHeight() {
+  return isSpinVisible() ? spinCharacterHeight : normalCharacterHeight;
 }
 
 function positionCharacter(step) {
   if (!step) return;
-  const stepHeight = parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue(
-      "--step-height",
-    ),
-  );
-  const charHeight = characterEl.getBoundingClientRect().height || 70;
+  const charHeight = getCharacterHeight();
   const top = step.y - charHeight + 10;
   characterEl.style.top = `${top}px`;
   updateTrack(step);
@@ -491,7 +717,7 @@ function positionCharacterOnStep(step) {
   if (!step) return;
   const stepRect = step.el.getBoundingClientRect();
   const gameRect = gameEl.getBoundingClientRect();
-  const charHeight = characterEl.getBoundingClientRect().height || 70;
+  const charHeight = getCharacterHeight();
   const top = stepRect.top - gameRect.top - charHeight + 10;
   const left =
     stepRect.left - gameRect.left + stepRect.width / 2 + characterOffset;
@@ -499,6 +725,18 @@ function positionCharacterOnStep(step) {
   characterEl.style.left = `${left}px`;
   updateGoalFramePosition();
   updateCurtainPosition();
+}
+
+function positionSpinCharacterOnStep(step) {
+  if (!step || !spinCharacterEl) return;
+  const stepRect = step.el.getBoundingClientRect();
+  const gameRect = gameEl.getBoundingClientRect();
+  const top = stepRect.top - gameRect.top - spinCharacterHeight + 10;
+  const left =
+    stepRect.left - gameRect.left + stepRect.width / 2 + characterOffset;
+
+  spinCharacterEl.style.top = `${top}px`;
+  spinCharacterEl.style.left = `${left}px`;
 }
 
 function animateJump() {
@@ -538,8 +776,75 @@ function shiftSteps() {
   }
 }
 
+function showStartOverlay() {
+  if (!overlayEl || !overlayGameoverEl) return;
+  overlayEl.classList.remove("is-gameover");
+  overlayGameoverEl.classList.add("is-hidden");
+  overlayEl.classList.remove("hidden");
+  hideFailModal();
+}
+
+function showFailModal(finalScore) {
+  if (!failModal) return;
+  if (failScoreValueEl) {
+    failScoreValueEl.textContent = formatScore(finalScore);
+  }
+  failModal.classList.remove("hidden");
+  gameStarted = false;
+  gameFinished = true;
+}
+
+function hideFailModal() {
+  if (!failModal) return;
+  failModal.classList.add("hidden");
+}
+
+function showGameoverOverlay({ isClear, finalScore, finalElapsedMs }) {
+  if (!overlayEl || !overlayGameoverEl) return;
+
+  hideFailModal();
+  overlayEl.classList.add("is-gameover");
+  overlayGameoverEl.classList.remove("is-hidden");
+  overlayEl.classList.remove("hidden");
+  gameStarted = false;
+  gameFinished = true;
+
+  if (overlayGameoverTitleEl) {
+    overlayGameoverTitleEl.textContent = isClear ? "GAME CLEAR" : "GAME OVER";
+  }
+
+  latestOverlaySummary = { isClear, finalScore, finalElapsedMs };
+  refreshOverlayStats();
+  renderRankingList();
+}
+
+function notifyGameover(finalScore, finalElapsedMs) {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage(
+      {
+        type: "MINIGAME_GAMEOVER",
+        score: finalScore,
+        elapsedMs: Math.floor(Math.max(0, finalElapsedMs)),
+      },
+      "*",
+    );
+  }
+}
+
+function hideOverlay() {
+  if (!overlayEl) return;
+  overlayEl.classList.add("hidden");
+}
+
 function move(action) {
-  if (busy || overlayEl.classList.contains("show") || gameFinished) return;
+  if (
+    busy ||
+    !gameStarted ||
+    !overlayEl.classList.contains("hidden") ||
+    gameFinished
+  ) {
+    return;
+  }
   busy = true;
 
   const nextStep = steps[1];
@@ -562,11 +867,11 @@ function move(action) {
   if (!isCorrect) {
     setDirection(intendedDir);
     animateFall(intendedDir);
+    const finalScore = score;
+    const finalElapsedMs = stopTimer();
     setTimeout(() => {
-      overlayTitleEl.textContent = "Game Over";
-      overlayMessageEl.textContent = "";
-      overlayEl.classList.add("show");
-      finalScoreEl.textContent = score;
+      notifyGameover(finalScore, finalElapsedMs);
+      showFailModal(finalScore);
       busy = false;
     }, fallDuration);
     return;
@@ -585,10 +890,11 @@ function move(action) {
 
   score = nextScore;
   scoreEl.textContent = score;
-  revealCurtainsIfNeeded();
 
   if (score === goalSteps) {
     gameFinished = true;
+    const finalScore = score;
+    const finalElapsedMs = stopTimer();
     setFacingByScreenPosition();
     setCurtainsVisible(true);
     setCurtainsOpen(false);
@@ -602,10 +908,12 @@ function move(action) {
       spawnConfettiBurst();
     }, confettiBurstDelay);
     setTimeout(() => {
-      overlayTitleEl.textContent = "Mission Success";
-      overlayMessageEl.textContent = "미션 성공!";
-      overlayEl.classList.add("show");
-      finalScoreEl.textContent = score;
+      notifyGameover(finalScore, finalElapsedMs);
+      showGameoverOverlay({
+        isClear: true,
+        finalScore,
+        finalElapsedMs,
+      });
       busy = false;
     }, successDelay);
     return;
@@ -619,21 +927,18 @@ function move(action) {
 function resetGame() {
   score = 0;
   scoreEl.textContent = score;
-  overlayEl.classList.remove("show");
-  overlayTitleEl.textContent = "Game Over";
-  overlayMessageEl.textContent = "";
+  resetTimer();
   gameFinished = false;
-  spinRequestId += 1;
+  hideFailModal();
   if (characterEl && characterDefaultSrc) {
     characterEl.src = characterDefaultSrc;
-    characterEl.classList.remove("is-spin");
+    characterEl.classList.remove("character-main-hidden");
+  }
+  if (spinCharacterEl) {
+    spinCharacterEl.classList.remove("is-visible");
   }
   setCurtainsVisible(false);
   setCurtainsOpen(false);
-  [curtainLeft, curtainRight].forEach((curtain) => {
-    if (!curtain) return;
-    curtain.classList.remove("no-transition");
-  });
   if (confettiWrapEl && confettiWrapEl.parentElement) {
     confettiWrapEl.parentElement.removeChild(confettiWrapEl);
   }
@@ -655,13 +960,100 @@ function resetGame() {
 
 turnBtn.addEventListener("click", () => move("turn"));
 forwardBtn.addEventListener("click", () => move("forward"));
-restartBtn.addEventListener("click", resetGame);
+
+function startGameSession() {
+  if (gameFinished) {
+    resetGame();
+  }
+  hideFailModal();
+  gameStarted = true;
+  startTimer();
+  hideOverlay();
+}
+
+if (startBtn) {
+  startBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    startGameSession();
+  });
+}
+
+if (failRetryBtn) {
+  failRetryBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    startGameSession();
+  });
+}
 
 resetGame();
+ensureSpinCharacterLayer();
+showStartOverlay();
 
 window.addEventListener("message", (event) => {
   if (event?.data?.type !== "MINIGAME_INIT") return;
-  applyFavoriteImage(event?.data?.favoriteImage);
+  applyFavoriteMeta({
+    image: event?.data?.favoriteImage,
+    name: event?.data?.favoriteName,
+  });
+});
+
+window.addEventListener("message", (event) => {
+  if (event?.data?.type !== "MINIGAME_RESULT") return;
+
+  const reward = event?.data?.reward;
+  const lastRewardDate = event?.data?.lastRewardDate;
+  if (reward !== undefined || lastRewardDate) {
+    const completeEls = document.querySelectorAll(".is-complete");
+    if (completeEls.length) {
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const isComplete = lastRewardDate === today || Boolean(reward);
+      completeEls.forEach((completeEl) => {
+        completeEl.textContent = isComplete
+          ? "\uC131\uACF5"
+          : "\uB3C4\uC804\uC911";
+        completeEl.classList.toggle("is-success", isComplete);
+        completeEl.classList.toggle("is-progress", !isComplete);
+      });
+    }
+  }
+
+  const data = event?.data?.data;
+  const result = Array.isArray(data?.resultList) ? data.resultList[0] : null;
+  if (result) {
+    const incomingGameTimeMs = normalizeApiTimeToMs(result?.gameTime);
+    const hasIncomingGameTime = Number.isFinite(incomingGameTimeMs);
+    const hasIncomingGameRank = Object.prototype.hasOwnProperty.call(
+      result,
+      "gameRank",
+    );
+
+    // Keep the latest valid clear record if a follow-up response omits time.
+    if (hasIncomingGameTime) {
+      latestApiGameTimeMs = incomingGameTimeMs;
+    }
+    if (
+      hasIncomingGameRank &&
+      (hasIncomingGameTime || Number.isFinite(latestApiGameTimeMs))
+    ) {
+      latestApiGameRank = result?.gameRank;
+    }
+
+    if (Array.isArray(result?.topList)) {
+      latestApiTopList = result.topList;
+    }
+    if (overlayEl?.classList.contains("is-gameover")) {
+      refreshOverlayStats();
+    }
+    renderRankingList();
+  }
+});
+
+window.addEventListener("message", (event) => {
+  if (event?.data?.type !== "MINIGAME_TOPLIST") return;
+  const data = event?.data?.data;
+  latestApiTopList = Array.isArray(data?.resultList) ? data.resultList : [];
+  renderRankingList();
 });
 
 const requestExit = () => {
@@ -712,5 +1104,9 @@ if (exitModal) {
 window.addEventListener("resize", () => {
   baseY = computeBaseY();
   computeColumns();
-  positionCharacter(steps[0]);
+  if (isSpinVisible()) {
+    positionSpinCharacterOnStep(steps[0]);
+  } else {
+    positionCharacter(steps[0]);
+  }
 });

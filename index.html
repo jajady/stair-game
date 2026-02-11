@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>최애를 찾아서</title>
+    <title>최애를 찾아서</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -20,6 +21,10 @@
         <div class="score">
           <div class="score-label">SCORE</div>
           <div class="score-value" id="score">0</div>
+        </div>
+        <div class="timer">
+          <div class="timer-label">TIME</div>
+          <div class="timer-value" id="timer">00:00.00</div>
         </div>
         <div class="steps" id="steps"></div>
         <img
@@ -54,10 +59,160 @@
         </div>
         <div class="overlay" id="overlay">
           <div class="panel">
-            <h2 id="overlayTitle">Game Over</h2>
-            <div id="overlayMessage"></div>
-            <div>Score: <span id="finalScore">0</span></div>
-            <button id="restartBtn">다시 시작</button>
+            <div class="overline" id="overlay-overline"></div>
+            <div class="overlay-title" id="overlay-title">
+              <img src="assets/finding-my-bias-logo_small.png" alt="" />
+              <div class="title-kiwis">
+                <img src="/assets/pixel_kiwi1.png" alt="" />
+              </div>
+            </div>
+            <p class="subtitle" id="overlay-subtitle">
+              방향을 바꿔가며<br />계단을 올라가요!
+            </p>
+            <img
+              class="overlay-illustration"
+              id="overlay-illustration"
+              src="assets/flying_kiwing.png"
+              alt="Kiwing"
+            />
+            <div class="mission-guide">
+              <div class="mission-chip">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="236"
+                  height="36"
+                  viewBox="0 0 236 36"
+                  fill="none"
+                >
+                  <g filter="url(#filter0_d_4859_2766)">
+                    <path d="M8 27H6V25H4V7H6V5H8V27Z" fill="#301F00" />
+                    <rect
+                      width="220"
+                      height="28"
+                      transform="translate(8 2)"
+                      fill="#301F00"
+                    />
+                    <path
+                      d="M228 27H230V25H232V7H230V5H228V27Z"
+                      fill="#301F00"
+                    />
+                  </g>
+                  <defs>
+                    <filter
+                      id="filter0_d_4859_2766"
+                      x="0"
+                      y="0"
+                      width="236"
+                      height="36"
+                      filterUnits="userSpaceOnUse"
+                      color-interpolation-filters="sRGB"
+                    >
+                      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                      <feColorMatrix
+                        in="SourceAlpha"
+                        type="matrix"
+                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha"
+                      />
+                      <feOffset dy="2" />
+                      <feGaussianBlur stdDeviation="2" />
+                      <feComposite in2="hardAlpha" operator="out" />
+                      <feColorMatrix
+                        type="matrix"
+                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                      />
+                      <feBlend
+                        mode="normal"
+                        in2="BackgroundImageFix"
+                        result="effect1_dropShadow_4859_2766"
+                      />
+                      <feBlend
+                        mode="normal"
+                        in="SourceGraphic"
+                        in2="effect1_dropShadow_4859_2766"
+                        result="shape"
+                      />
+                    </filter>
+                  </defs>
+                </svg>
+                <p class="mission-text">
+                  <img
+                    src="/assets/pixel_small_kiwi.png"
+                    alt=""
+                  />
+                  <span>일일미션</span>이 추가되었어요!
+                </p>
+              </div>
+              <div class="mission-info">
+                <p>
+                  20초 안에 50점을 달성하면<br /><span>그린키위 100개</span>가
+                  지급돼요!
+                </p>
+                <p>(단, 1일 1회 한정)</p>
+              </div>
+            </div>
+            <div class="gameover-panel is-hidden" id="overlay-gameover">
+              <div class="gameover-card stats-card">
+                <div class="card-title" id="overlay-gameover-title">
+                  GAME OVER
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-label" id="overlay-stat-label-1">SCORE</div>
+                  <div class="stat-value" id="overlay-stat-value-1">00</div>
+                  <div class="stat-label" id="overlay-stat-label-2">
+                    BEST RECORD
+                  </div>
+                  <div class="stat-value" id="overlay-stat-value-2">없음</div>
+                  <div class="stat-label" id="overlay-stat-label-3">RANK</div>
+                  <div class="stat-value rank-out" id="overlay-stat-value-3">
+                    없음
+                  </div>
+                </div>
+                <div class="daily-mission">
+                  <p>20초 안에 50점 달성하기</p>
+                  <p class="is-complete">도전중</p>
+                  <div class="mission-chip">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="102"
+                      height="26"
+                      viewBox="0 0 102 26"
+                      fill="none"
+                    >
+                      <path d="M4 24H2V22H0V4H2V2H4V24Z" fill="#301F00" />
+                      <rect
+                        width="94"
+                        height="26"
+                        transform="translate(4)"
+                        fill="#301F00"
+                      />
+                      <path
+                        d="M98 24H100V22H102V4H100V2H98V24Z"
+                        fill="#301F00"
+                      />
+                    </svg>
+                    <p class="mission-text">
+                      <img
+                        src="/assets/pixel_small_kiwi.png"
+                        alt=""
+                      />
+                      일일미션
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="gameover-card ranking-card">
+                <div class="card-title">RANKING</div>
+                <ol class="ranking-list" id="overlay-ranking-list"></ol>
+              </div>
+            </div>
+            <p class="scoreline" id="overlay-score"></p>
+            <button
+              class="start-btn"
+              id="start-btn"
+              type="button"
+              aria-label="GAME START"
+            ></button>
           </div>
         </div>
       </div>
@@ -106,6 +261,47 @@
               네
             </button>
           </div>
+        </div>
+      </div>
+      <div class="fail-modal hidden" id="fail-modal">
+        <div class="fail-modal__panel">
+          <p class="fail-modal__title">GAME OVER</p>
+          <div class="fail-modal__score">
+            <span>SCORE</span>
+            <span id="fail-score-value">00</span>
+          </div>
+          <div class="daily-mission fail-modal__daily-mission">
+            <p>20초 안에 50점 달성하기</p>
+            <p class="is-complete">도전중</p>
+            <div class="mission-chip">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="102"
+                height="26"
+                viewBox="0 0 102 26"
+                fill="none"
+              >
+                <path d="M4 24H2V22H0V4H2V2H4V24Z" fill="#301F00" />
+                <rect
+                  width="94"
+                  height="26"
+                  transform="translate(4)"
+                  fill="#301F00"
+                />
+                <path d="M98 24H100V22H102V4H100V2H98V24Z" fill="#301F00" />
+              </svg>
+              <p class="mission-text">
+                <img src="/assets/pixel_small_kiwi.png" alt="" />
+                일일미션
+              </p>
+            </div>
+          </div>
+          <button
+            class="fail-modal__retry"
+            id="fail-retry-btn"
+            type="button"
+            aria-label="다시하기"
+          ></button>
         </div>
       </div>
     </div>
