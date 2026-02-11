@@ -934,7 +934,7 @@ body {
   padding: 0;
   border: none;
   background-color: transparent;
-  background-image: url("/assets/game_start_btn.png");
+  background-image: url("assets/game_start_btn.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -950,7 +950,7 @@ body {
   padding: 0;
   border: none;
   background-color: transparent;
-  background-image: url("/assets/game_restart_btn.png");
+  background-image: url("assets/game_restart_btn.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -1042,7 +1042,7 @@ body {
   padding: 0;
   border: none;
   background-color: transparent;
-  background-image: url("/assets/game_restart_btn.png");
+  background-image: url("assets/game_restart_btn.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
