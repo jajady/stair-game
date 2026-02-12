@@ -285,7 +285,6 @@ body {
   transform-origin: center;
   z-index: 4;
   opacity: 0;
-  visibility: hidden;
   pointer-events: none;
   transition:
     transform 300ms ease-in-out,
